@@ -3,6 +3,7 @@
 #include "mruby.h"
 #include "sqlite3.h"
 #include "sqliteconnection.h"
+#include "sqlitequery.h"
 
 #define STRING_LEN(STR) (sizeof(STR) - 1)
 #define LIBDRSQLITE3_VERSION "0.0.1"
@@ -14,13 +15,16 @@ SQLite_MethodCalledOnUninitializedObject(mrb_state *mrb) {
   __builtin_unreachable();
 }
 
+DRB_FFI_EXPORT
 void drb_register_c_extensions_with_api(mrb_state *mrb,
                                         struct drb_api_t *api_) {
   api = api_;
-#define SYM(NAME)                                                              \
-  sym_##NAME = api->mrb_intern_static(mrb, #NAME, STRING_LEN(#NAME));
+#define SYMX(NAME, VALUE)                                                      \
+  sym_##NAME = api->mrb_intern_static(mrb, #VALUE, STRING_LEN(#VALUE));
 #include "syms.inc"
-#undef SYM
+#undef SYMX
+
+  mrb_p(mrb, api->mrb_symbol_value(sym_VERSION));
 
   class_SQLite = api->mrb_define_module_id(mrb, sym_SQLite);
 
@@ -40,4 +44,5 @@ void drb_register_c_extensions_with_api(mrb_state *mrb,
                                              STRING_LEN(LIBDRSQLITE3_VERSION)));
 
   SQLiteConnection_Init(mrb);
+  SQLiteQuery_Init(mrb);
 }

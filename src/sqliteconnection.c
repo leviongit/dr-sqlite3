@@ -61,15 +61,58 @@ mrb_value SQLiteConnection_Query(mrb_state *mrb, mrb_value vself) {
   struct RString *sql = RSTRING(arg);
   sqlite3_stmt *stmt;
 
-  int ec =
-      sqlite3_prepare_v2(self, RSTR_PTR(sql), RSTR_LEN(sql), &stmt, nullptr);
+  const char *tail = nullptr;
+
+  int ec = sqlite3_prepare_v2(self, RSTR_PTR(sql), RSTR_LEN(sql), &stmt, &tail);
 
   if (ec != SQLITE_OK) {
     mrb_raise(mrb, class_BaseError, "failed to compile query");
   }
+  if (tail != nullptr && *tail != '\0') {
+    sqlite3_finalize(stmt);
+    api->mrb_raise(
+        mrb, class_BaseError,
+        "multiple statements are not supported by SQLite::Connection#query, "
+        "but the provided SQL string contains multiple statements");
+  }
 
-  return api->mrb_obj_value(api->mrb_data_object_alloc(mrb, class_SQLiteQuery,
-                                                       stmt, &SQLiteQuery_DT));
+  struct RData *query =
+      api->mrb_data_object_alloc(mrb, class_SQLiteQuery, stmt, &SQLiteQuery_DT);
+
+  int cols = sqlite3_column_count(stmt);
+
+  mrb_value row = api->mrb_ary_new_capa(mrb, cols);
+
+  api->mrb_obj_iv_set(mrb, (struct RObject *)query, sym_iv_row, row);
+
+  return api->mrb_obj_value(query);
+}
+
+mrb_value SQLiteConnection_Exec(mrb_state *mrb, mrb_value vself) {
+  sqlite3 *self = api->mrb_data_check_get_ptr(mrb, vself, &SQLiteConnection_DT);
+
+  if (self == nullptr)
+    SQLite_MethodCalledOnUninitializedObject(mrb);
+
+  mrb_value arg = mrb_get_arg1(mrb);
+
+  if (!mrb_string_p(arg)) {
+    mrb_raise(mrb, api->mrb_exc_get_id(mrb, sym_BaseError),
+              "expected String for argument of SQLite::Connection#exec");
+  }
+
+  struct RString *sql = RSTRING(arg);
+  char *err = nullptr;
+
+  int ec = sqlite3_exec(self, RSTR_PTR(sql), nullptr, nullptr, &err);
+
+  if (ec != SQLITE_OK) {
+    mrb_value err_str = api->mrb_str_new_cstr(mrb, err);
+    sqlite3_free(err);
+    mrb_raise(mrb, class_BaseError, RSTRING_PTR(err_str));
+  }
+
+  return api->mrb_nil_value();
 }
 
 void SQLiteConnection_Init(mrb_state *mrb) {
@@ -81,4 +124,8 @@ void SQLiteConnection_Init(mrb_state *mrb) {
   api->mrb_define_method_id(mrb, class_SQLiteConnection, sym_initialize,
                             SQLiteConnection_Initialize,
                             MRB_ARGS_REQ(1) | MRB_ARGS_OPT(1));
+  api->mrb_define_method_id(mrb, class_SQLiteConnection, sym_query,
+                            SQLiteConnection_Query, MRB_ARGS_REQ(1));
+  api->mrb_define_method_id(mrb, class_SQLiteConnection, sym_exec,
+                            SQLiteConnection_Exec, MRB_ARGS_REQ(1));
 }

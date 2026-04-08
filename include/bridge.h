@@ -11,21 +11,18 @@ extern struct RClass *class_BaseError;
 extern struct RClass *class_UninitObject;
 extern struct RClass *class_NoConsError;
 extern struct RClass *class_ReturnCode;
-extern struct RClass *class_ReturnCode_Busy;
-extern struct RClass *class_ReturnCode_Done;
-extern struct RClass *class_ReturnCode_Error;
-extern struct RClass *class_ReturnCode_Misuse;
 
-#define SYM(NAME) extern mrb_sym sym_##NAME;
+#define SYMX(NAME, ...) extern mrb_sym sym_##NAME;
 #include "syms.inc"
-#undef SYM
+#undef SYMX
 
 inline static struct RClass *
 DefineSQLiteClassSuper(mrb_state *mrb, mrb_sym name, struct RClass *super) {
   return api->mrb_define_class_under_id(mrb, class_SQLite, name, super);
 }
 
-inline static struct RClass *DefineSQLiteClass(mrb_state *mrb, mrb_sym name) {
+[[maybe_unused]] inline static struct RClass *DefineSQLiteClass(mrb_state *mrb,
+                                                                mrb_sym name) {
   return DefineSQLiteClassSuper(mrb, name, mrb->object_class);
 }
 

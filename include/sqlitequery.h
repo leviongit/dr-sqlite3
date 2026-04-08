@@ -8,6 +8,6 @@
 extern struct RClass *class_SQLiteQuery;
 extern mrb_data_type SQLiteQuery_DT;
 
-void SQLiteQuerty_Init(mrb_state *mrb);
+void SQLiteQuery_Init(mrb_state *mrb);
 
 #endif

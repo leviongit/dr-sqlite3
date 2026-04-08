@@ -1,5 +1,10 @@
+#ifndef SYMX
+#error "define SYMX"
+#endif
+
 #ifndef SYM
-#error "define SYM"
+#define SYM_DEFAULT
+#define SYM(_S) SYMX(_S, _S)
 #endif
 
 SYM(allocate)
@@ -16,7 +21,10 @@ SYM(new)
 SYM(NoConsError)
 SYM(ArgumentError)
 SYM(ReturnCode)
-SYM(Busy)
-SYM(Done)
-SYM(Error)
-SYM(Misuse)
+SYMX(iv_row, @row)
+SYM(exec)
+
+#ifdef SYM_DEFAULT
+#undef SYM_DEFAULT
+#undef SYM
+#endif

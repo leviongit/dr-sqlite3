@@ -3,7 +3,7 @@
 set -ex
 
 CC=${CC:-clang}
-CFLAGS=("-Wall" "-Wextra" "-fPIC" "-Iinclude" "-Iinclude/dr")
+CFLAGS=("-Wall" "-Wextra" "-fpic" "-Iinclude" "-Iinclude/dr")
 declare FORCE
 declare -a COMPILED
 
