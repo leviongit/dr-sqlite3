@@ -5,8 +5,15 @@
 #include "sqliteconnection.h"
 #include "sqlitequery.h"
 
-#define STRING_LEN(STR) (sizeof(STR) - 1)
 #define LIBDRSQLITE3_VERSION "0.0.1"
+
+struct drb_api_t *api;
+struct RClass *class_SQLite;
+struct RClass *class_BaseError;
+struct RClass *class_UninitObject;
+struct RClass *class_NoConsError;
+struct RClass *class_ReturnCode;
+void SQLite_InitSymbols(mrb_state *mrb);
 
 [[noreturn, gnu::cold, clang::noinline]] void
 SQLite_MethodCalledOnUninitializedObject(mrb_state *mrb) {
@@ -19,19 +26,15 @@ DRB_FFI_EXPORT
 void drb_register_c_extensions_with_api(mrb_state *mrb,
                                         struct drb_api_t *api_) {
   api = api_;
-#define SYMX(NAME, VALUE)                                                      \
-  sym_##NAME = api->mrb_intern_static(mrb, #VALUE, STRING_LEN(#VALUE));
-#include "syms.inc"
-#undef SYMX
 
-  mrb_p(mrb, api->mrb_symbol_value(sym_VERSION));
+  SQLite_InitSymbols(mrb);
 
   class_SQLite = api->mrb_define_module_id(mrb, sym_SQLite);
 
   mrb_value vSQLite = api->mrb_obj_value(class_SQLite);
 
-  class_BaseError =
-      DefineSQLiteClassSuper(mrb, sym_BaseError, mrb->eStandardError_class);
+  class_BaseError = DefineSQLiteClassSuper(
+      mrb, sym_BaseError, api->mrb_exc_get_id(mrb, sym_StandardError));
   class_UninitObject =
       DefineSQLiteClassSuper(mrb, sym_UninitObject, class_BaseError);
 

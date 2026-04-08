@@ -23,6 +23,10 @@ SYM(ArgumentError)
 SYM(ReturnCode)
 SYMX(iv_row, @row)
 SYM(exec)
+SYM(StandardError)
+SYMX(has_columns_p, has_columns?)
+SYMX(finished_p, finished?)
+SYM(step)
 
 #ifdef SYM_DEFAULT
 #undef SYM_DEFAULT

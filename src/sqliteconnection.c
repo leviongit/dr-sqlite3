@@ -8,6 +8,7 @@
 
 void dfree_sqlite(mrb_state *, void *sqlite) { sqlite3_close_v2(sqlite); }
 
+struct RClass *class_SQLiteConnection;
 mrb_data_type SQLiteConnection_DT = {.struct_name = "sqlite",
                                      .dfree = dfree_sqlite};
 
@@ -26,18 +27,17 @@ mrb_value SQLiteConnection_Initialize(mrb_state *mrb, mrb_value self) {
     return self;
   }
 
-  mrb_value vdbname = api->mrb_nil_value();
+  const char *dbname = ":memory:";
   mrb_int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
 
-  api->mrb_get_args(mrb, "|si", &vdbname, &flags);
-
-  const char *dbname = (mrb_nil_p(vdbname)) ? ":memory:" : RSTRING_PTR(vdbname);
+  api->mrb_get_args(mrb, "|zi", &dbname, &flags);
 
   sqlite3 *sql;
   int ec = sqlite3_open_v2(dbname, &sql, flags, nullptr);
 
   if (ec != SQLITE_OK) {
-    mrb_raise(mrb, class_BaseError, "failed to allocate sqlite connection");
+    api->mrb_raise(mrb, class_BaseError,
+                   "failed to allocate sqlite connection");
   }
 
   sql_data->data = sql;
@@ -51,11 +51,11 @@ mrb_value SQLiteConnection_Query(mrb_state *mrb, mrb_value vself) {
   if (self == nullptr)
     SQLite_MethodCalledOnUninitializedObject(mrb);
 
-  mrb_value arg = mrb_get_arg1(mrb);
+  mrb_value arg = api->mrb_get_arg1(mrb);
 
   if (!mrb_string_p(arg)) {
-    mrb_raise(mrb, api->mrb_exc_get_id(mrb, sym_ArgumentError),
-              "expected String for argument of SQLite::Connection#query");
+    api->mrb_raise(mrb, api->mrb_exc_get_id(mrb, sym_ArgumentError),
+                   "expected String for argument of SQLite::Connection#query");
   }
 
   struct RString *sql = RSTRING(arg);
@@ -66,7 +66,7 @@ mrb_value SQLiteConnection_Query(mrb_state *mrb, mrb_value vself) {
   int ec = sqlite3_prepare_v2(self, RSTR_PTR(sql), RSTR_LEN(sql), &stmt, &tail);
 
   if (ec != SQLITE_OK) {
-    mrb_raise(mrb, class_BaseError, "failed to compile query");
+    api->mrb_raise(mrb, class_BaseError, "failed to compile query");
   }
   if (tail != nullptr && *tail != '\0') {
     sqlite3_finalize(stmt);
@@ -94,11 +94,11 @@ mrb_value SQLiteConnection_Exec(mrb_state *mrb, mrb_value vself) {
   if (self == nullptr)
     SQLite_MethodCalledOnUninitializedObject(mrb);
 
-  mrb_value arg = mrb_get_arg1(mrb);
+  mrb_value arg = api->mrb_get_arg1(mrb);
 
   if (!mrb_string_p(arg)) {
-    mrb_raise(mrb, api->mrb_exc_get_id(mrb, sym_BaseError),
-              "expected String for argument of SQLite::Connection#exec");
+    api->mrb_raise(mrb, api->mrb_exc_get_id(mrb, sym_BaseError),
+                   "expected String for argument of SQLite::Connection#exec");
   }
 
   struct RString *sql = RSTRING(arg);
@@ -109,7 +109,7 @@ mrb_value SQLiteConnection_Exec(mrb_state *mrb, mrb_value vself) {
   if (ec != SQLITE_OK) {
     mrb_value err_str = api->mrb_str_new_cstr(mrb, err);
     sqlite3_free(err);
-    mrb_raise(mrb, class_BaseError, RSTRING_PTR(err_str));
+    api->mrb_raise(mrb, class_BaseError, RSTRING_PTR(err_str));
   }
 
   return api->mrb_nil_value();

@@ -6,6 +6,7 @@
 
 void sqlite_query_dfree(mrb_state *, void *ptr) { sqlite3_finalize(ptr); }
 
+struct RClass *class_SQLiteQuery;
 mrb_data_type SQLiteQuery_DT = {.struct_name = "sqlite_query",
                                 .dfree = sqlite_query_dfree};
 
@@ -91,4 +92,10 @@ void SQLiteQuery_Init(mrb_state *mrb) {
                                   SQLiteQuery_NoConsError, MRB_ARGS_ANY());
   api->mrb_define_method_id(mrb, class_SQLiteQuery, sym_initialize,
                             SQLiteQuery_NoConsError, MRB_ARGS_ANY());
+  api->mrb_define_method_id(mrb, class_SQLiteQuery, sym_has_columns_p,
+                            SQLiteQuery_HasColumnsP, MRB_ARGS_NONE());
+  api->mrb_define_method_id(mrb, class_SQLiteQuery, sym_finished_p,
+                            SQLiteQuery_FinishedP, MRB_ARGS_NONE());
+  api->mrb_define_method_id(mrb, class_SQLiteQuery, sym_step, SQLiteQuery_Step,
+                            MRB_ARGS_NONE());
 }

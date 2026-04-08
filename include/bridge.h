@@ -15,6 +15,7 @@ extern struct RClass *class_ReturnCode;
 #define SYMX(NAME, ...) extern mrb_sym sym_##NAME;
 #include "syms.inc"
 #undef SYMX
+#define STRING_LEN(STR) (sizeof(STR) - 1)
 
 inline static struct RClass *
 DefineSQLiteClassSuper(mrb_state *mrb, mrb_sym name, struct RClass *super) {
