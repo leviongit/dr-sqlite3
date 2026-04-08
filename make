@@ -3,7 +3,7 @@
 set -ex
 
 CC=${CC:-clang}
-CFLAGS=("-Wall" "-Wextra" "-fpic" "-Iinclude" "-Iinclude/dr")
+CFLAGS=("-Wall" "-Wextra" "-fpic" "-Iinclude" "-Iinclude/dr" "-std=c23")
 declare FORCE
 declare -a COMPILED
 
@@ -13,8 +13,8 @@ function compile {
   local source="src/${file}.c"
   local out="build/${file}.o"
   test "${source}" -nt "${out}" -o \( -n "${FORCE}" -a "${file}" != "sqlite3" \) -o "${FORCE:=0}" -gt 1 &&
-    "${CC}" -c -std=c23 "${CFLAGS[@]}" "${source}" -o "${out}" 
-  COMPILED+=(${out})
+    "${CC}" -c "${CFLAGS[@]}" "${source}" -o "${out}" 
+  COMPILED+=("${out}")
 }
 
 while test $# -gt 0; do
