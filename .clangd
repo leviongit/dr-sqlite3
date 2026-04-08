@@ -1,0 +1,9 @@
+CompileFlags:
+  Add:
+    - -Wall
+    - -Wextra
+    - -std=c23
+    - -xc
+    - -Wconversions
+    - -I../include
+    - -I../include/dr
